@@ -1,5 +1,8 @@
+// use crate::screen;
 use crate::chip8::flag_register;
 use crate::chip8::memory_management;
+
+// use crate::screen::Screen;
 
 #[derive(Debug, PartialEq)]
 pub struct Chip8 {

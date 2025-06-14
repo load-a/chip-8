@@ -1,11 +1,14 @@
 mod chip8;
 mod address;
+// mod screen;
 
 use chip8::Chip8;
 use address::Address;
+// use screen::Screen;
+
 
 fn main() {
-    let _chip8 = Chip8::new();
+    let chip8 = Chip8::new();
     // Fetch
     // Decode
     // Evaluate
