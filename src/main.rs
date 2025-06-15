@@ -1,10 +1,12 @@
 mod chip8;
 mod address;
 mod screen;
+mod instruction;
 
 use chip8::Chip8;
 use address::Address;
 use screen::Screen;
+use instruction::Instruction;
 
 
 fn main() {
@@ -16,7 +18,6 @@ fn main() {
         chip8.screen.update();
     }
 
-    // chip8.screen.
     // Fetch
     // Decode
     // Evaluate
