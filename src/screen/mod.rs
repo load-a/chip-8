@@ -1,6 +1,6 @@
 mod core;
 
-// #[cfg(test)]
-// mod test;
+#[cfg(test)]
+mod test;
 
-pub use core::Screen;
+pub use core::{Screen, WIDTH, HEIGHT};
