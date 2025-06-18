@@ -1,9 +1,9 @@
 #[derive(Debug, Default, PartialEq)]
 pub struct Instruction {
-    nibble_a: u8,
-    nibble_b: u8,
-    nibble_c: u8,
-    nibble_d: u8,
+    pub nibble_a: u8,
+    pub nibble_b: u8,
+    pub nibble_c: u8,
+    pub nibble_d: u8,
     pub opcode: u16,
     pub address: u16,
 }

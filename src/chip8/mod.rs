@@ -1,6 +1,8 @@
 mod core;
-mod memory_management;
-mod flag_register;
+pub mod memory_management;
+pub mod flag_register;
+pub mod program_counter;
+pub mod decoder;
 
 #[cfg(test)]
 mod test;

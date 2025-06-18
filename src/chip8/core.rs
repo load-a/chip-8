@@ -1,5 +1,7 @@
 use crate::chip8::flag_register;
-use crate::chip8::memory_management;
+use crate::chip8::memory_management::MemoryManagement;
+use crate::chip8::program_counter;
+use crate::chip8::decoder;
 
 use crate::screen::Screen;
 

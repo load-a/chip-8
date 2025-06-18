@@ -24,6 +24,7 @@ fn construct_window() -> Result<Window, Error> {
 
 #[derive(Debug)]
 pub struct Screen {
+    // pub buffer: [u8; 64 * 32],
     pub frame: Vec<u32>,
     pub window: Option<Window>,
     pub pixel_on: u32,
@@ -62,6 +63,10 @@ impl Screen {
                 *pixel = self.pixel_off;
             }
         }
+    }
+
+    pub fn blackout(&mut self) {
+        self.color(self.pixel_off)
     }
 
     pub fn color(&mut self, color: u32) {

@@ -12,10 +12,10 @@ impl FlagRegister for Chip8 {
     }
 
     fn set_flag_register(&mut self) {
-        self.register[15] = 1
+        self.register[15] = 1;
     }
 
     fn reset_flag_register(&mut self) {
-        self.register[15] = 0
+        self.register[15] = 0;
     }
 }
