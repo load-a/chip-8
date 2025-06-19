@@ -105,38 +105,46 @@ impl Decoder for Chip8 {
     }
 
     fn category_thirteen(&mut self, instruction: Instruction) {
-        // Get the screen coordinate x from Register X
-        let sprite_x = self.register[instruction.x() as usize];
+        // Get sprite data (screen position, height)
+        let x = self.register[instruction.x() as usize] as usize;
+        let y = self.register[instruction.y() as usize] as usize;
+        let height = instruction.n() as usize;
 
-        // Get the screen coordinate y from Register Y
-        let sprite_y = self.register[instruction.y() as usize];
-
-        // Get the sprite height from [N]
-        let sprite_height = instruction.n();
-
-        // Unset the Flag Register
+        // Reset flag
         self.reset_flag_register();
 
-        // N-times, do the following:
-        for row in 0..sprite_height {
-            // Don't wrap
-            if row > 32 { break }
+        // Do this for every row
+        for row in 0..height {
+            // Get the sprite for this row
+            let sprite = self.memory[(self.index_register + row as u16) as usize];
 
-            //  Read the sprite row
-            let sprite = self.memory[(self.index_register + (row as u16)) as usize];
-
-            //  Shift it to match the location (sending extra bits to a second buffer)
-            let shift = sprite_x % 8;
-            let acnhor_byte = sprite >> shift;
-            let overflow_byte = sprite << (8 - shift);
-
-            //  XOR it to the bytes starting at (x, y + N) [do this twice if shifted]
+            // For every bit in this sprite, do this:
             for bit in 0..8 {
-                
-            }
+                // Get the x and y for the current pixel
+                let pixel_x = (x + bit) % 64;
+                let pixel_y = (y + row) % 32;
+                // Calculate this pixel's index in the Frame
+                let idx = pixel_x + pixel_y * 64;
 
-            //  STOP at screen boundaries
-            //  If any pixels were turned off, set the Flag Register
+                // Get the current pixel color from the sprite
+                let sprite_pixel = (sprite >> (7 - bit)) & 1;
+                // Get the old pixel color and convert it to a bit
+                let old_pixel = if self.screen.frame[idx] == self.screen.pixel_on { 1 } else { 0 };
+                // XOR the old and new pixel
+                let new_pixel = old_pixel ^ sprite_pixel;
+
+                // If the old pixel was turned off, set the flag
+                if old_pixel == 1 && new_pixel == 0 {
+                    self.set_flag_register();
+                }
+
+                // Convert the new pixel into its actual color
+                self.screen.frame[idx] = if new_pixel == 1 {
+                    self.screen.pixel_on
+                } else {
+                    self.screen.pixel_off
+                };
+            }
         }
     }
 
