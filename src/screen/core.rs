@@ -3,28 +3,8 @@ use minifb::{Key, Window, WindowOptions, Error};
 pub const WIDTH: u8 = 64;
 pub const HEIGHT: u8 = 32;
 
-#[cfg(test)]
-fn construct_window() -> Result<Window, Error> {
-    Err(Error::WindowCreate(String::from("Cannot create window")))
-}
-
-#[cfg(not(test))]
-fn construct_window() -> Result<Window, Error> {
-    Window::new(
-        "Chip-8 Emulator",
-        WIDTH as usize,
-        HEIGHT as usize,
-        WindowOptions {
-            resize: false,
-            scale: minifb::Scale::X8,
-            ..WindowOptions::default()
-        }
-    )
-}
-
 #[derive(Debug)]
 pub struct Screen {
-    // pub buffer: [u8; 64 * 32],
     pub frame: Vec<u32>,
     pub window: Option<Window>,
     pub pixel_on: u32,
@@ -87,4 +67,23 @@ impl Screen {
                 .update_with_buffer(&self.frame, WIDTH as usize, HEIGHT as usize)
                 .unwrap();
     }
+}
+
+#[cfg(test)]
+fn construct_window() -> Result<Window, Error> {
+    Err(Error::WindowCreate(String::from("Cannot create window")))
+}
+
+#[cfg(not(test))]
+fn construct_window() -> Result<Window, Error> {
+    Window::new(
+        "Chip-8 Emulator",
+        WIDTH as usize,
+        HEIGHT as usize,
+        WindowOptions {
+            resize: false,
+            scale: minifb::Scale::X8,
+            ..WindowOptions::default()
+        }
+    )
 }

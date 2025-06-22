@@ -106,41 +106,47 @@ impl Decoder for Chip8 {
 
     fn category_thirteen(&mut self, instruction: Instruction) {
         // Get sprite data (screen position, height)
-        let x = self.register[instruction.x() as usize] as usize;
-        let y = self.register[instruction.y() as usize] as usize;
-        let height = instruction.n() as usize;
+        let screen_x = self.register[instruction.x() as usize] as usize;
+        let screen_y = self.register[instruction.y() as usize] as usize;
+        let sprite_height = instruction.n() as usize;
 
         // Reset flag
         self.reset_flag_register();
 
         // Do this for every row
-        for row in 0..height {
+        for row in 0..sprite_height {
             // Get the sprite for this row
             let sprite = self.memory[(self.index_register + row as u16) as usize];
 
             // For every bit in this sprite, do this:
             for bit in 0..8 {
                 // Get the x and y for the current pixel
-                let pixel_x = (x + bit) % 64;
-                let pixel_y = (y + row) % 32;
+                let offset_x = (screen_x + bit) % 64;
+                let offset_y = (screen_y + row) % 32;
                 // Calculate this pixel's index in the Frame
-                let idx = pixel_x + pixel_y * 64;
+                let index = offset_x + offset_y * 64;
 
                 // Get the current pixel color from the sprite
                 let sprite_pixel = (sprite >> (7 - bit)) & 1;
+
                 // Get the old pixel color and convert it to a bit
-                let old_pixel = if self.screen.frame[idx] == self.screen.pixel_on { 1 } else { 0 };
+                let old_pixel = if self.screen.frame[index] == self.screen.pixel_on {
+                    1
+                } else {
+                    0
+                };
+
                 // XOR the old and new pixel
-                let new_pixel = old_pixel ^ sprite_pixel;
+                let new_pixel = sprite_pixel ^ old_pixel;
 
                 // If the old pixel was turned off, set the flag
                 if old_pixel == 1 && new_pixel == 0 {
-                    self.set_flag_register();
+                    self.set_flag_register()
                 }
 
                 // Convert the new pixel into its actual color
-                self.screen.frame[idx] = if new_pixel == 1 {
-                    self.screen.pixel_on
+                self.screen.frame[index] = if new_pixel == 1 { 
+                    self.screen.pixel_on 
                 } else {
                     self.screen.pixel_off
                 };
