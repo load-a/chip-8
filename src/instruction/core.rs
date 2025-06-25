@@ -1,4 +1,4 @@
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Instruction {
     pub nibble_a: u8,
     pub nibble_b: u8,
@@ -47,4 +47,48 @@ impl Instruction {
     pub fn nnn(&self) -> u16 {
         u16::from_be_bytes([self.nibble_b, self.nn()])
     }
+
+    // pub fn debug(&self) -> String {
+    //     let category = match self.nibble_a {
+    //         0x0 => "Meta",
+    //         0x1 => "Jump",
+    //         0x2 => "Call",
+    //         0x3 => "VX_Inequal",
+    //         0x4 => "VX_Equal",
+    //         0x5 => "VX_VY_Inequal",
+    //         0x6 => "Assign_Literal",
+    //         0x7 => "Add_Assign",
+    //         0x8 => "Math_and_Logic",
+    //         0x9 => "VX_VY_Equal",
+    //         0xA => "Set_Index",
+    //         0xB => "Jump_with_Offset",
+    //         0xC => "Random_Number",
+    //         0xD => "Draw",
+    //         0xE => "Input_State",
+    //         0xF => "Output_and_State",
+    //         _ => "UNDEFINED",
+    //     }
+    // }
+}
+
+enum Category {
+    System,
+    Jump,
+    Call,
+    SkipInequal,
+
+    SkipEqual,
+    SkipRegistersInequal,
+    LoadImmediate,
+    AddImmediate,
+
+    ArithmeticLogic,
+    SkipRegistersEqual,
+    LoadIndex,
+    JumpOffset,
+
+    Random,
+    Draw,
+    SkipInput,
+    Misc,
 }

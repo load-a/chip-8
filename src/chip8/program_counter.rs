@@ -2,28 +2,33 @@ use crate::chip8::core::Chip8;
 use crate::instruction::Instruction;
 
 pub trait ProgramCounter {
-    fn read_instruction_bytes(&self) -> [u8; 2];
+    fn fetch_instruction(&mut self) -> Option<Instruction>;
+    fn read_instruction_bytes(&self) -> Option<[u8; 2]>;
     fn increment_program_counter(&mut self);
-    fn fetch_instruction(&mut self) -> Instruction;
+    fn end_of_source(&self) -> bool;
 }
 
 impl ProgramCounter for Chip8 {
-    fn read_instruction_bytes(&self) -> [u8; 2] {
-        let first_byte = self.program_counter as usize;
-        let second_byte = self.program_counter.wrapping_add(1) as usize;
+    fn fetch_instruction(&mut self) -> Option<Instruction> {
+        let bytes = self.read_instruction_bytes()?;
+        let address = self.program_counter;
+        self.increment_program_counter();
+        Some(Instruction::new(bytes, address))
+    }
 
-        [self.memory[first_byte], self.memory[second_byte]]
+    fn read_instruction_bytes(&self) -> Option<[u8; 2]> {
+        let pc = self.program_counter as usize;
+
+        if self.end_of_source() { return None }
+
+        Some([self.memory[pc], self.memory[pc + 1]])
     }
 
     fn increment_program_counter(&mut self) {
         self.program_counter = self.program_counter.wrapping_add(2);
     }
 
-    fn fetch_instruction(&mut self) -> Instruction {
-        let bytes = self.read_instruction_bytes();
-        let address = self.program_counter;
-
-        self.increment_program_counter();
-        Instruction::new(bytes, address)
+    fn end_of_source(&self) -> bool {
+        (self.program_counter as usize + 1) >= 0x200 + self.source.bytes.len()
     }
 }

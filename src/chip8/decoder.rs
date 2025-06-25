@@ -3,7 +3,7 @@ use crate::address::Address;
 use crate::instruction::Instruction;
 
 pub trait Decoder {
-    fn decode(&mut self, instruction: Instruction);
+    fn decode(&mut self, instruction: Option<Instruction>);
     fn category_zero(&mut self, instruction: Instruction);
     fn category_one(&mut self, instruction: Instruction);
     fn category_two(&mut self, instruction: Instruction);
@@ -23,7 +23,12 @@ pub trait Decoder {
 }
 
 impl Decoder for Chip8 {
-    fn decode(&mut self, instruction: Instruction) {
+    fn decode(&mut self, instruction: Option<Instruction>) {
+        let instruction = match instruction {
+            Some(inst) => inst,
+            None => return,
+        };
+
         match instruction.category() {
             0x0 => self.category_zero(instruction),
             0x1 => self.category_one(instruction),
@@ -41,7 +46,10 @@ impl Decoder for Chip8 {
             0xD => self.category_thirteen(instruction),
             0xE => self.category_fourteen(instruction),
             0xF => self.category_fifteen(instruction),
-            _ => ()
+            _ => {
+                println!("No Category Decoded");
+                ()
+            }
         }
     }
 
@@ -51,11 +59,13 @@ impl Decoder for Chip8 {
                 if instruction.nibble_d == 0xE {
                     // Return from subroutine
                 } else {
-                    // self.screen.color(0x000000);
                     self.screen.blackout();
                 }
             },
-            _ => println!("Instruction: SysAddress 0NNN is not implemented on modern interpreters.")
+            _ => {
+                let warning_message = "Instruction: SysAddress 0NNN is not implemented on modern interpreters.";
+                println!("{} -> {}", warning_message, instruction.opcode);
+            }
         }
     }
 
@@ -65,16 +75,16 @@ impl Decoder for Chip8 {
     }
 
     fn category_two(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0x2 not implemented")
     }
     fn category_three(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0x3 not implemented")
     }
     fn category_four(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0x4 not implemented")
     }
     fn category_five(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0x5 not implemented")
     }
 
     fn category_six(&mut self, instruction: Instruction) {
@@ -89,19 +99,19 @@ impl Decoder for Chip8 {
     }
 
     fn category_eight(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0x8 not implemented")
     }
     fn category_nine(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0x9 not implemented")
     }
     fn category_ten(&mut self, instruction: Instruction) {
         self.index_register = instruction.nnn();
     }
     fn category_eleven(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0xB not implemented")
     }
     fn category_twelve(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0xC not implemented")
     }
 
     fn category_thirteen(&mut self, instruction: Instruction) {
@@ -155,9 +165,9 @@ impl Decoder for Chip8 {
     }
 
     fn category_fourteen(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0xE not implemented")
     }
     fn category_fifteen(&mut self, instruction: Instruction) {
-        todo!()
+        println!("Category 0xF not implemented")
     }
 }

@@ -1,6 +1,7 @@
 use std::fs;
 use std::env;
 
+#[derive(Default, Debug, PartialEq)]
 pub struct Source {
     pub raw: String,
     pub bytes: Vec<u8>,
@@ -12,7 +13,7 @@ impl Source {
         let args: Vec<String> = env::args().collect();
 
         if args.len() != 2 {
-            eprintln!("Usage {} <filename>", args[0]);
+            eprintln!("Source File not provided to {}", args[0]);
             std::process::exit(1);
         }
 
