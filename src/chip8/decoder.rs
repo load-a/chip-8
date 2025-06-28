@@ -1,4 +1,6 @@
-use crate::chip8::{core::Chip8, flag_register::FlagRegister};
+use rand::Rng;
+
+use crate::chip8::{core::Chip8, flag_register::FlagRegister, program_counter::ProgramCounter};
 use crate::address::Address;
 use crate::instruction::Instruction;
 
@@ -53,11 +55,12 @@ impl Decoder for Chip8 {
         }
     }
 
+    // Clear Screen or Return from Subroutine
     fn category_zero(&mut self, instruction: Instruction) {
         match instruction.nibble_c {
             0xE => {
                 if instruction.nibble_d == 0xE {
-                    // Return from subroutine
+                    self.pop_pc();
                 } else {
                     self.screen.blackout();
                 }
@@ -69,49 +72,136 @@ impl Decoder for Chip8 {
         }
     }
 
+    // Jump NNN
     fn category_one(&mut self, instruction: Instruction) {
-        // Jump NNN
         self.program_counter = instruction.nnn() 
     }
 
+    // Call NNN
     fn category_two(&mut self, instruction: Instruction) {
-        println!("Category 0x2 not implemented")
-    }
-    fn category_three(&mut self, instruction: Instruction) {
-        println!("Category 0x3 not implemented")
-    }
-    fn category_four(&mut self, instruction: Instruction) {
-        println!("Category 0x4 not implemented")
-    }
-    fn category_five(&mut self, instruction: Instruction) {
-        println!("Category 0x5 not implemented")
+        self.push_pc();
+        self.program_counter = instruction.nnn();
     }
 
+    // Skip if VX == NN
+    fn category_three(&mut self, instruction: Instruction) {
+        if self.register[instruction.x() as usize] == instruction.nn() {
+            self.increment_program_counter()
+        };
+    }
+
+    // Skip if VX != NN
+    fn category_four(&mut self, instruction: Instruction) {
+        if self.register[instruction.x() as usize] != instruction.nn() {
+            self.increment_program_counter()
+        };
+    }
+
+    // Skip if VX == VY
+    fn category_five(&mut self, instruction: Instruction) {
+        if self.register[instruction.x() as usize] == self.register[instruction.y() as usize] {
+            self.increment_program_counter()
+        };
+    }
+
+    // Load VX with NN
     fn category_six(&mut self, instruction: Instruction) {
-        // Set VX to NN
         self.register[instruction.x() as usize] = instruction.nn();
     }
 
+    // Add NN to VX
     fn category_seven(&mut self, instruction: Instruction) {
         let x_register = instruction.x() as usize;
 
         self.register[x_register] = self.register[x_register].wrapping_add(instruction.nn());
     }
 
+    // Arithmetic and Logic
     fn category_eight(&mut self, instruction: Instruction) {
-        println!("Category 0x8 not implemented")
+        let vx = instruction.x() as usize;
+        let vy = instruction.y() as usize;
+        let register_x = self.register[vx];
+        let register_y = self.register[vy];
+
+        match instruction.nibble_d {
+            0 => self.register[vx] = register_y,
+            1 => self.register[vx] |= register_y,
+            2 => self.register[vx] &= register_y,
+            3 => self.register[vx] ^= register_y,
+            4 => {
+                let (sum, carry) = self.register[vx].overflowing_add(register_y);
+
+                if carry { self.set_flag_register() } else { self.reset_flag_register() }
+
+                self.register[vx] = sum;
+            },
+            5 => {
+                let (difference, borrow) = register_x.overflowing_sub(register_y);
+
+                if borrow { self.reset_flag_register() } else { self.set_flag_register() }
+
+                self.register[vx] = difference;
+            },
+            6 => {
+                // Configuration [Experimental; Not Tested]
+                if self.memory[0x186] == 0xFF {
+                    println!("Address 0x186 is enabled(FF); Loading VX with VY before SHIFTING.");
+                    self.register[vx] = register_y;
+                }
+
+                if register_x % 2 == 0 { 
+                    self.reset_flag_register() 
+                } else { 
+                    self.set_flag_register() 
+                }
+
+                self.register[vx] = register_x >> 1;
+            },
+            7 => {
+                let (difference, borrow) = register_y.overflowing_sub(register_x);
+
+                if borrow { self.reset_flag_register() } else { self.set_flag_register() }
+
+                self.register[vx] = difference;
+            },
+            0xE => {
+                // Configuration [Experimental; Not Tested]
+                if self.memory[0x18E] == 0xFF {
+                    println!("Address 0x18E is enabled(FF); Loading VX with VY before SHIFTING.");
+                    self.register[vx] = register_y;
+                }
+
+                if register_x >> 7 == 0 { self.reset_flag_register() } else { self.set_flag_register() }
+
+                self.register[vx] = register_x << 1;
+            }
+            _ => ()
+        }
     }
+
+    // Skip if VX != VY
     fn category_nine(&mut self, instruction: Instruction) {
-        println!("Category 0x9 not implemented")
+        if self.register[instruction.x() as usize] != self.register[instruction.y() as usize] {
+            self.increment_program_counter()
+        };
     }
+
+    // Load Index Register
     fn category_ten(&mut self, instruction: Instruction) {
         self.index_register = instruction.nnn();
     }
+
+    // Jump V0 with offset NNN
     fn category_eleven(&mut self, instruction: Instruction) {
-        println!("Category 0xB not implemented")
+        self.program_counter = instruction.nnn().wrapping_add(self.register[0] as u16);
     }
+
+    // Random (RNG & NN)
     fn category_twelve(&mut self, instruction: Instruction) {
-        println!("Category 0xC not implemented")
+        let mut rng = rand::thread_rng();
+        let n: u8 = rng.gen();
+
+        self.register[instruction.x() as usize] = n & instruction.nn();
     }
 
     fn category_thirteen(&mut self, instruction: Instruction) {
