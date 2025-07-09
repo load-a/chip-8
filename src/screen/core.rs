@@ -67,6 +67,14 @@ impl Screen {
                 .update_with_buffer(&self.frame, WIDTH as usize, HEIGHT as usize)
                 .unwrap();
     }
+
+    pub fn play_sound(&self) {
+        todo!();
+    }
+
+    pub fn stop_sound(&self) {
+        todo!();
+    }
 }
 
 #[cfg(test)]

@@ -1,6 +1,8 @@
 use rand::Rng;
 
-use crate::chip8::{core::Chip8, flag_register::FlagRegister, program_counter::ProgramCounter};
+use crate::chip8::{core::Chip8, flag_register::FlagRegister, program_counter::ProgramCounter,
+    inputs::Inputs,
+};
 use crate::address::Address;
 use crate::instruction::Instruction;
 
@@ -204,6 +206,7 @@ impl Decoder for Chip8 {
         self.register[instruction.x() as usize] = n & instruction.nn();
     }
 
+    // Draw/Display
     fn category_thirteen(&mut self, instruction: Instruction) {
         // Get sprite data (screen position, height)
         let screen_x = self.register[instruction.x() as usize] as usize;
@@ -254,10 +257,65 @@ impl Decoder for Chip8 {
         }
     }
 
+    // Input Skips
     fn category_fourteen(&mut self, instruction: Instruction) {
-        println!("Category 0xE not implemented")
+        let key = format!("{:x}", self.register[instruction.x() as usize]);
+
+        match instruction.nn() {
+            0x9E => if self.check_key(key) { self.increment_program_counter() },
+            0xA1 => if !self.check_key(key) { self.increment_program_counter() },
+            _ => println!("WARNING: Instruction EX{} not implemented.", instruction.nn()),
+        }
     }
+
+    // Miscellany
     fn category_fifteen(&mut self, instruction: Instruction) {
-        println!("Category 0xF not implemented")
+        let vx = instruction.x() as usize;
+        let register_x = self.register[vx];
+
+        match instruction.nn() {
+            0x07 => self.register[vx] = self.timer,
+            0x0A => {
+                if !self.any_key_pressed() {
+                    self.program_counter -= 2;
+                }
+            },
+            0x15 => self.timer = register_x,
+            0x18 => self.sound = register_x,
+            0x1E => self.index_register += register_x as u16,
+            0x29 => self.index_register = (register_x as u16) * 5 + 0x50,
+            0x33 => {
+                let digits = [
+                    register_x / 100,
+                    (register_x / 10) % 10,
+                    register_x % 10
+                ];
+
+                for n in 0..3 {
+                    let address = (self.index_register + n) as usize;
+                    self.memory[address] = digits[(2 - n) as usize];
+                }
+            },
+            0x55 => {
+                for n in 0..instruction.x() {
+                    let vn = n as usize;
+                    let address = (n as u16 + self.index_register) as usize;
+
+                    self.memory[address] = self.register[vn];
+                }
+            },
+            0x65 => {
+                for n in 0..instruction.x() {
+                    let vn = n as usize;
+                    let address = (n as u16 + self.index_register) as usize;
+
+                    self.register[vn] = self.memory[address];
+                }
+            }
+            _ => {
+                let nn = format!("{:x}", instruction.nn());
+                println!("WARNING: Instruction FX{} not implemented.", nn)
+            }
+        }
     }
 }
